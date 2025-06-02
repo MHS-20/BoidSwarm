@@ -8,16 +8,16 @@ import java.util.List;
 
 public class BoidsManagerActor extends AbstractActorWithStash {
 
+    private long t0;
     private int framerate;
     private static final int FRAMERATE = 60;
-    // private ViewActor view;
+
     private BoidsView view;
-    private long t0;
-
     private BoidsModel model;
-    private int nBoids;
 
-    private List<Boid> boids;
+    private int nBoids;
+    private List<Boid> updatedBoids;
+
     private int count = 0;
     private List<ActorRef> boidActors;
 
@@ -25,7 +25,7 @@ public class BoidsManagerActor extends AbstractActorWithStash {
         this.model = model;
         this.nBoids = nBoids;
         this.view = view;
-        this.boids = new ArrayList<>();
+        this.updatedBoids = new ArrayList<>();
         this.boidActors = new ArrayList<>();
     }
 
@@ -100,9 +100,6 @@ public class BoidsManagerActor extends AbstractActorWithStash {
             ActorRef boidActor = getContext().actorOf(BoidActor.props(boid, model));
             boidActors.add(boidActor);
         }
-        // this.unstashAll();
-        // this.getContext().become(updateBehavior());
-        // self().tell(new StartSimulation(), self());
     }
 
     private void onStartSimulation(StartSimulation msg) {
@@ -113,7 +110,7 @@ public class BoidsManagerActor extends AbstractActorWithStash {
             boidActor.tell(new StartUpdate(model.getBoids()), self());
         }
 
-        boids.clear();
+        updatedBoids.clear();
         count = 0;
 
         this.unstashAll();
@@ -128,7 +125,7 @@ public class BoidsManagerActor extends AbstractActorWithStash {
         for (ActorRef boidActor : boidActors) {
             boidActor.tell(new StartUpdate(model.getBoids()), self());
         }
-        boids.clear();
+        updatedBoids.clear();
         count = 0;
 
         this.unstashAll();
@@ -137,22 +134,20 @@ public class BoidsManagerActor extends AbstractActorWithStash {
 
     private void onUpdatedBoid(UpdatedBoid msg) {
         // System.out.println("Received updated boid: " + msg.boid());
-        boids.add(msg.boid());
+        updatedBoids.add(msg.boid());
         count++;
         if (count == nBoids) {
 
             // update gui
-            model.setBoids(new ArrayList<>(boids));
-            //view.setModel(model);
+            model.setBoids(new ArrayList<>(updatedBoids));
             view.update(framerate);
 
             var dtElapsed = System.currentTimeMillis() - t0;
-            var framratePeriod = 1000 / FRAMERATE;
-            if (dtElapsed < framratePeriod) {
+            var frameratePeriod = 1000 / FRAMERATE;
+            if (dtElapsed < frameratePeriod) {
                 try {
-                    Thread.sleep(framratePeriod - dtElapsed);
-                } catch (Exception ex) {
-                }
+                    Thread.sleep(frameratePeriod - dtElapsed);
+                } catch (Exception ex) { }
                 framerate = FRAMERATE;
             } else {
                 framerate = (int) (1000 / dtElapsed);
@@ -170,15 +165,14 @@ public class BoidsManagerActor extends AbstractActorWithStash {
     }
 
     private void onResetSimulation(ResetSimulation msg) {
-        this.boids = new ArrayList<>(msg.boids());
+        this.updatedBoids = new ArrayList<>(msg.boids());
         this.nBoids = msg.boids().size();
-        //model.generateBoids(nBoids);
+
         for (ActorRef boidActor : boidActors) {
             boidActor.tell(PoisonPill.getInstance(), self());
         }
 
         boidActors.clear();
-        //this.getContext().become(createReceive());
         this.getSelf().tell(new BootSimulation(model), self());
     }
 
