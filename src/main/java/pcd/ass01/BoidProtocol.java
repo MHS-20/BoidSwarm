@@ -3,14 +3,12 @@ package pcd.ass01;
 import java.util.List;
 
 public interface BoidProtocol {
+    // Simulation Workflow
     public static record StartUpdate(List<Boid> boids) {}
     public static record ContinueSimulation () {}
-
     public static record UpdatedBoid (Boid boid) {}
-    public static record UpdateView (BoidsModel model, int framerate) {}
-    public static record SetBoid (Boid boid) {}
 
-    // GUI events
+    // Simulation Control
     public static record BootSimulation(BoidsModel model) {}
     public static record StartSimulation () {}
     public static record StopSimulation () {}

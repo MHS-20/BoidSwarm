@@ -36,10 +36,17 @@ Il boid viene mandato indietro aggiornato svuotando e riempiendo di nuovo la lis
 ### Inefficiente 
 È troppo inefficiente fare che ogni attore ha i suoi oggetti, fare un numero di attori pari al numero di core?
 Se akka ha un pool di thread, non dovrebbe cambiare così tanto, dopo dovrei modificare il protocollo.
-Il problema maggiore è fare le copie degli oggetti o scambiarsi tanti messaggi. 
-Dovrei usare delle classi immutabili, in java devo farlo a mano.
+Dovrei usare delle classi immutabili, in java devo farlo a mano (in realtà va già bene così)
+
+Il problema maggiore è fare le copie degli oggetti e scambiarsi tanti messaggi. 
+E' pesante mandare in modo seriale lo stesso messaggio a tutti, o raccogliere tutti i risultati.
+Potrei sfruttare dei sotto-manager per parallelizzare l'invio di messaggi? 
+Non posso crearmi dei thread miei esterni ad akka perché rompo l'astrazione.
+
+DOMANDA: basta fare new Boid nel BoidActor, oppure devo copiare anche Pos & Vel?
 
 ### TO DO & DeepCopies
+- Fare messaggi con oggetti immutabili
 1. Ognuno deve avere una copia del model (fatto)
 2. La lista di boid è condivisa ed ognuno lavora su un boid copia
 3. Il manager si tiene il model ed una lista in cui raccogliere i boid 
@@ -83,10 +90,10 @@ degli altri viene fatto lo stash, in modo che vengano gestiti
 appena si arriva ad un behaviour adatto.
 
 Manager Behaviours : 
-- Behaviour 0: boot, crea gli attori e fa partire la simulazione
-- Behaviour 1: fa partire il calcolo
-- Behaviour 2: raccoglie tutti gli updates ed aggiorna la gui
-- Behaviour 4: stopped simulation, si può fare il reset
+- Behaviour 0: boot, crea gli attori
+- Behaviour 1: update, fa partire il calcolo o reagisce agli eventi della gui, si manda un messaggio per continuare la simulazione ma viene gestisto dopo
+- Behaviour 2: collect, raccoglie tutti gli updates ed aggiorna la gui (non reagisce agli eventi della gui)
+- Behaviour 4: stopped simulation, si può fare il reset, rimane reattivo agli eventi della gui
 
 Usando più behaviour può mandare a sé stesso dei messaggi ma non gestirli subito, 
 per continuare il loop ma fare altre cose prima.
