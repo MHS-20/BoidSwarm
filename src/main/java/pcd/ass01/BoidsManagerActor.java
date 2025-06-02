@@ -19,7 +19,7 @@ public class BoidsManagerActor extends AbstractActorWithStash {
 
     private List<Boid> boids;
     private int count = 0;
-    private List<ActorRef> boidActors = new ArrayList<>();
+    private List<ActorRef> boidActors;
 
     public BoidsManagerActor(BoidsModel model, int nBoids, BoidsView view) {
         this.model = model;
@@ -142,8 +142,8 @@ public class BoidsManagerActor extends AbstractActorWithStash {
         if (count == nBoids) {
 
             // update gui
-            model.setBoids(boids);
-            view.setModel(model);
+            model.setBoids(new ArrayList<>(boids));
+            //view.setModel(model);
             view.update(framerate);
 
             var dtElapsed = System.currentTimeMillis() - t0;
