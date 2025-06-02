@@ -40,6 +40,9 @@ public class BoidActor extends AbstractActor {
                 .match(SetCohesionWeight.class, msg -> {
                     model.setCohesionWeight(msg.weight());
                 })
+                .match(SetBoid.class, msg -> {
+                    this.boid = msg.boid();
+                })
                 .build();
     }
 

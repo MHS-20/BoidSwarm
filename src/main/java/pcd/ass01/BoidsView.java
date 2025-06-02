@@ -81,7 +81,9 @@ public class BoidsView implements ChangeListener {
 
         resetButton = new JButton("Reset");
         resetButton.addActionListener(e -> {
-            manager.tell(new BoidProtocol.ResetSimulation(this.nBoids), ActorRef.noSender());
+            model.generateBoids(this.nBoids);
+            this.update(60);
+            manager.tell(new BoidProtocol.ResetSimulation(model.getBoids()), ActorRef.noSender());
         });
 
         playButton = new JButton("Resume");
