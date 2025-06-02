@@ -6,6 +6,7 @@ import pcd.ass01.BoidProtocol.*;
 import java.util.ArrayList;
 import java.util.List;
 
+
 public class BoidsManagerActor extends AbstractActorWithStash {
 
     private long t0;
@@ -21,6 +22,9 @@ public class BoidsManagerActor extends AbstractActorWithStash {
     private int count = 0;
     private List<ActorRef> boidActors;
 
+    private List<ActorRef> dispatcherActors;
+    private final int NUM_DISPATCHERS = 8;
+
     public BoidsManagerActor(BoidsModel model, int nBoids, BoidsView view) {
         this.model = model;
         this.nBoids = nBoids;
@@ -31,6 +35,18 @@ public class BoidsManagerActor extends AbstractActorWithStash {
 
     public static Props props(BoidsModel model, int nBoids, BoidsView view) {
         return Props.create(BoidsManagerActor.class, () -> new BoidsManagerActor(model, nBoids, view));
+    }
+
+    private void createDispatchers() {
+        dispatcherActors = new ArrayList<>();
+        int chunkSize = (int) Math.ceil((double) boidActors.size() / NUM_DISPATCHERS);
+
+        for (int i = 0; i < NUM_DISPATCHERS; i++) {
+            int start = i * chunkSize;
+            int end = Math.min(start + chunkSize, boidActors.size());
+            List<ActorRef> chunk = boidActors.subList(start, end);
+            dispatcherActors.add(getContext().actorOf(BoidDispatcherActor.props(chunk)));
+        }
     }
 
     @Override
@@ -100,15 +116,21 @@ public class BoidsManagerActor extends AbstractActorWithStash {
             ActorRef boidActor = getContext().actorOf(BoidActor.props(boid, model));
             boidActors.add(boidActor);
         }
+
+        createDispatchers();
     }
 
     private void onStartSimulation(StartSimulation msg) {
         System.out.println("Starting simulation");
         t0 = System.currentTimeMillis();
 
-        for (ActorRef boidActor : boidActors) {
-            boidActor.tell(new StartUpdate(model.getBoids()), self());
+        for (ActorRef dispatcher : dispatcherActors) {
+            dispatcher.tell(new StartUpdate(model.getBoids()), self());
         }
+
+//        for (ActorRef boidActor : boidActors) {
+//            boidActor.tell(new StartUpdate(model.getBoids()), self());
+//        }
 
         updatedBoids.clear();
         count = 0;
@@ -147,7 +169,8 @@ public class BoidsManagerActor extends AbstractActorWithStash {
             if (dtElapsed < frameratePeriod) {
                 try {
                     Thread.sleep(frameratePeriod - dtElapsed);
-                } catch (Exception ex) { }
+                } catch (Exception ex) {
+                }
                 framerate = FRAMERATE;
             } else {
                 framerate = (int) (1000 / dtElapsed);
