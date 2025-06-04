@@ -24,6 +24,11 @@ public class BoidDispatcherActor extends AbstractActor {
                         boid.tell(msg, sender());
                     }
                 })
+                .match(ResetSimulation.class, msg -> {
+                    for (ActorRef boid : assignedBoids) {
+                        boid.tell(PoisonPill.getInstance(), self());
+                    }
+                })
                 .build();
     }
 }

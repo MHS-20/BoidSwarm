@@ -11,7 +11,7 @@ public class BoidsManagerActor extends AbstractActorWithStash {
 
     private long t0;
     private int framerate;
-    private static final int FRAMERATE = 60;
+    private static final int FRAMERATE = 50;
 
     private BoidsView view;
     private BoidsModel model;
@@ -191,8 +191,12 @@ public class BoidsManagerActor extends AbstractActorWithStash {
         this.updatedBoids = new ArrayList<>(msg.boids());
         this.nBoids = msg.boids().size();
 
-        for (ActorRef boidActor : boidActors) {
-            boidActor.tell(PoisonPill.getInstance(), self());
+//        for (ActorRef boidActor : boidActors) {
+//            boidActor.tell(PoisonPill.getInstance(), self());
+//        }
+
+        for (ActorRef dispatcher : dispatcherActors) {
+            dispatcher.tell(new ResetSimulation(model.getBoids()), self());
         }
 
         boidActors.clear();
