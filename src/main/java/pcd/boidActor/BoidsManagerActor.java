@@ -44,7 +44,7 @@ public class BoidsManagerActor extends AbstractActorWithStash {
                 .match(SetSeparationWeight.class, msg -> this.stash())
                 .match(SetAlignmentWeight.class, msg -> this.stash())
                 .match(SetCohesionWeight.class, msg -> this.stash())
-                .match(UpdatedBoid.class, msg -> this.stash())
+                .match(BoidUpdated.class, msg -> this.stash())
                 .build();
     }
 
@@ -56,7 +56,7 @@ public class BoidsManagerActor extends AbstractActorWithStash {
                 .match(SetSeparationWeight.class, this::onSeparationWeight)
                 .match(SetAlignmentWeight.class, this::onAlignmentWeight)
                 .match(SetCohesionWeight.class, this::onCohesionWeight)
-                .match(UpdatedBoid.class, msg -> this.stash())
+                .match(BoidUpdated.class, msg -> this.stash())
                 .match(BootSimulation.class, msg -> this.stash())
                 .match(ResetSimulation.class, msg -> this.stash())
                 .build();
@@ -64,7 +64,8 @@ public class BoidsManagerActor extends AbstractActorWithStash {
 
     public Receive collectUpdateBehavior() {
         return receiveBuilder()
-                .match(UpdatedBoid.class, this::onUpdatedBoid)
+                .match(VelocityCalculated.class, this::onVelocityCalculated)
+                .match(BoidUpdated.class, this::onBoidUpdated)
                 .match(StartSimulation.class, msg -> this.stash())
                 .match(ContinueSimulation.class, msg -> this.stash())
                 .match(BootSimulation.class, msg -> this.stash())
@@ -86,7 +87,7 @@ public class BoidsManagerActor extends AbstractActorWithStash {
                 .match(SetAlignmentWeight.class, this::onAlignmentWeight)
                 .match(SetCohesionWeight.class, this::onCohesionWeight)
                 .match(ContinueSimulation.class, msg -> this.stash())
-                .match(UpdatedBoid.class, msg -> this.stash())
+                .match(BoidUpdated.class, msg -> this.stash())
                 .build();
     }
 
@@ -95,19 +96,18 @@ public class BoidsManagerActor extends AbstractActorWithStash {
         model = msg.model();
         boidActors.clear();
         List<Boid> boids = model.getBoids();
-        for (int i = 0; i < nBoids; i++) {
-            Boid boid = boids.get(i);
+        for (Boid boid : boids) {
             ActorRef boidActor = getContext().actorOf(BoidActor.props(boid, model));
             boidActors.add(boidActor);
         }
     }
 
     private void onStartSimulation(StartSimulation msg) {
-        System.out.println("Starting simulation");
+        System.out.println("Starting simulation " + boidActors.size());
         t0 = System.currentTimeMillis();
 
         for (ActorRef boidActor : boidActors) {
-            boidActor.tell(new StartUpdate(model.getBoids()), self());
+            boidActor.tell(new CalculateVelocity(model.getBoids()), self());
         }
 
         updatedBoids.clear();
@@ -116,14 +116,13 @@ public class BoidsManagerActor extends AbstractActorWithStash {
         this.unstashAll();
         this.getContext().become(collectUpdateBehavior());
         System.out.println("Started simulation");
-
     }
 
     private void onContinueSimulation(ContinueSimulation msg) {
         //System.out.println("Starting simulation with " + nBoids + " boids.");
         t0 = System.currentTimeMillis();
         for (ActorRef boidActor : boidActors) {
-            boidActor.tell(new StartUpdate(model.getBoids()), self());
+            boidActor.tell(new CalculateVelocity(model.getBoids()), self());
         }
         updatedBoids.clear();
         count = 0;
@@ -132,12 +131,22 @@ public class BoidsManagerActor extends AbstractActorWithStash {
         this.getContext().become(collectUpdateBehavior());
     }
 
-    private void onUpdatedBoid(UpdatedBoid msg) {
+    private void onVelocityCalculated(VelocityCalculated msg) {
+        count++;
+        if (count < boidActors.size()) {
+            return;
+        }
+        for (ActorRef boidActor : boidActors) {
+            boidActor.tell(new UpdateBoid(), self());
+        }
+        count = 0;
+    }
+
+    private void onBoidUpdated(BoidUpdated msg) {
         // System.out.println("Received updated boid: " + msg.boid());
-        updatedBoids.add(msg.boid());
+        updatedBoids.add(msg.updatedBoid());
         count++;
         if (count == nBoids) {
-
             // update gui
             model.setBoids(new ArrayList<>(updatedBoids));
             view.update(framerate);

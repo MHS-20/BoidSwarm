@@ -28,7 +28,8 @@ public class BoidActor extends AbstractActor {
     @Override
     public Receive createReceive() {
         return receiveBuilder()
-                .match(StartUpdate.class, this::onStartUpdate)
+                .match(CalculateVelocity.class, this::onCalculateVelocity)
+                .match(UpdateBoid.class, this::onUpdateBoid)
                 .match(SetSeparationWeight.class, msg -> {
                     model.setSeparationWeight(msg.weight());
                 })
@@ -41,9 +42,15 @@ public class BoidActor extends AbstractActor {
                 .build();
     }
 
-    public void onStartUpdate(StartUpdate msg) {
+    public void onCalculateVelocity(CalculateVelocity msg) {
         model.setBoids(msg.boids());
-        boid.update(model);
-        getSender().tell(new UpdatedBoid(new Boid(boid.getPos(), boid.getVel())), getSelf());
+        boid.calculateVelocity(model);
+        getSender().tell(new VelocityCalculated(), getSelf());
+    }
+
+    public void onUpdateBoid(UpdateBoid msg) {
+        boid.updateVelocity(model);
+        boid.updatePosition(model);
+        getSender().tell(new BoidUpdated(boid), getSelf());
     }
 }
