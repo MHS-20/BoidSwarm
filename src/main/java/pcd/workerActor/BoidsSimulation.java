@@ -1,4 +1,4 @@
-package pcd.chuckactor;
+package pcd.workerActor;
 
 import akka.actor.ActorRef;
 import akka.actor.ActorSystem;

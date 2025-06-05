@@ -1,16 +1,16 @@
-package pcd.chuckactor;
+package pcd.workerActor;
 
 import akka.actor.AbstractActor;
 import akka.actor.Props;
-import pcd.chuckactor.BoidProtocol.*;
+import pcd.workerActor.BoidProtocol.*;
 
 import java.util.List;
 
-public class BoidActor extends AbstractActor {
+public class WorkerActor extends AbstractActor {
     private BoidsModel model;
     private List<Boid> chunk;
 
-    public BoidActor(List<Boid> chunk, BoidsModel model) {
+    public WorkerActor(List<Boid> chunk, BoidsModel model) {
         this.chunk = chunk;
         this.model = new BoidsModel(model.getBoids().size(),
                 model.getSeparationWeight(),
@@ -24,7 +24,7 @@ public class BoidActor extends AbstractActor {
     }
 
     public static Props props(List<Boid> chunk, BoidsModel model) {
-        return Props.create(BoidActor.class, () -> new BoidActor(chunk, model));
+        return Props.create(WorkerActor.class, () -> new WorkerActor(chunk, model));
     }
 
     @Override

@@ -1,7 +1,7 @@
-package pcd.chuckactor;
+package pcd.workerActor;
 
 import akka.actor.*;
-import pcd.chuckactor.BoidProtocol.*;
+import pcd.workerActor.BoidProtocol.*;
 
 import java.util.List;
 

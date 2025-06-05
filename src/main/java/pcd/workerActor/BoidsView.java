@@ -1,4 +1,4 @@
-package pcd.chuckactor;
+package pcd.workerActor;
 
 import akka.actor.ActorRef;
 
@@ -6,7 +6,7 @@ import javax.swing.*;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 
-import pcd.chuckactor.BoidProtocol.*;
+import pcd.workerActor.BoidProtocol.*;
 
 import java.awt.*;
 import java.util.Hashtable;

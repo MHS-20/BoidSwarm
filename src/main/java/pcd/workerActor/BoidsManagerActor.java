@@ -1,7 +1,7 @@
-package pcd.chuckactor;
+package pcd.workerActor;
 
 import akka.actor.*;
-import pcd.chuckactor.BoidProtocol.*;
+import pcd.workerActor.BoidProtocol.*;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -118,7 +118,7 @@ public class BoidsManagerActor extends AbstractActorWithStash {
             int start = i * chunkSize;
             int end = Math.min(start + chunkSize, boids.size());
             List<Boid> chunk = boids.subList(start, end);
-            boidActors.add(getContext().actorOf(BoidActor.props(chunk, model)));
+            boidActors.add(getContext().actorOf(WorkerActor.props(chunk, model)));
         }
     }
 
@@ -154,7 +154,6 @@ public class BoidsManagerActor extends AbstractActorWithStash {
 
     private void onUpdatedBoid(UpdatedBoid msg) {
         // System.out.println("Received updated boid: " + msg.boid());
-        //updatedBoids.add(msg.updatedChunk());
         updatedBoids.addAll(msg.updatedChunk());
         count++;
         if (count == boidActors.size()) {
