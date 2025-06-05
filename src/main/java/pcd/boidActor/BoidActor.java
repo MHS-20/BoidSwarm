@@ -44,6 +44,6 @@ public class BoidActor extends AbstractActor {
     public void onStartUpdate(StartUpdate msg) {
         model.setBoids(msg.boids());
         boid.update(model);
-        getSender().tell(new UpdatedBoid(boid), getSelf());
+        getSender().tell(new UpdatedBoid(new Boid(boid.getPos(), boid.getVel())), getSelf());
     }
 }
