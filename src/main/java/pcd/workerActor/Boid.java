@@ -16,6 +16,14 @@ public class Boid {
         this.vel = vel;
     }
 
+    public Boid(Boid other){
+        this.pos = other.pos;
+        this.vel = other.vel;
+        this.separation = other.separation;
+        this.alignment = other.alignment;
+        this.cohesion = other.cohesion;
+    }
+
     public P2d getPos() {
         return pos;
     }

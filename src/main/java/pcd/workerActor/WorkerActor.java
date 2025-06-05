@@ -11,7 +11,9 @@ public class WorkerActor extends AbstractActor {
     private List<Boid> chunk;
 
     public WorkerActor(List<Boid> chunk, BoidsModel model) {
+        //this.chunk = chunk;
         this.chunk = chunk;
+
         this.model = new BoidsModel(model.getBoids().size(),
                 model.getSeparationWeight(),
                 model.getAlignmentWeight(),
@@ -30,7 +32,8 @@ public class WorkerActor extends AbstractActor {
     @Override
     public Receive createReceive() {
         return receiveBuilder()
-                .match(StartUpdate.class, this::onStartUpdate)
+                .match(CalculateVelocity.class, this::onCalculateVelocity)
+                .match(UpdateBoid.class, this::onUpdateBoid)
                 .match(SetSeparationWeight.class, msg -> {
                     model.setSeparationWeight(msg.weight());
                 })
@@ -43,11 +46,19 @@ public class WorkerActor extends AbstractActor {
                 .build();
     }
 
-    public void onStartUpdate(StartUpdate msg) {
+    public void onCalculateVelocity(CalculateVelocity msg) {
         model.setBoids(msg.boids());
-        for(Boid boid : chunk) {
-            boid.update(model);
+        for (Boid boid : chunk) {
+            boid.calculateVelocity(model);
         }
-        getSender().tell(new UpdatedBoid(chunk), getSelf());
+        getSender().tell(new VelocityCalculated(), getSelf());
+    }
+
+    public void onUpdateBoid(UpdateBoid msg) {
+        for (Boid boid : chunk) {
+            boid.updateVelocity(model);
+            boid.updatePosition(model);
+        }
+        getSender().tell(new BoidUpdated(chunk), getSelf());
     }
 }

@@ -48,7 +48,7 @@ public class BoidsManagerActor extends AbstractActorWithStash {
                 .match(SetSeparationWeight.class, msg -> this.stash())
                 .match(SetAlignmentWeight.class, msg -> this.stash())
                 .match(SetCohesionWeight.class, msg -> this.stash())
-                .match(UpdatedBoid.class, msg -> this.stash())
+                .match(BoidUpdated.class, msg -> this.stash())
                 .build();
     }
 
@@ -60,7 +60,7 @@ public class BoidsManagerActor extends AbstractActorWithStash {
                 .match(SetSeparationWeight.class, this::onSeparationWeight)
                 .match(SetAlignmentWeight.class, this::onAlignmentWeight)
                 .match(SetCohesionWeight.class, this::onCohesionWeight)
-                .match(UpdatedBoid.class, msg -> this.stash())
+                .match(BoidUpdated.class, msg -> this.stash())
                 .match(BootSimulation.class, msg -> this.stash())
                 .match(ResetSimulation.class, msg -> this.stash())
                 .build();
@@ -68,7 +68,8 @@ public class BoidsManagerActor extends AbstractActorWithStash {
 
     public Receive collectUpdateBehavior() {
         return receiveBuilder()
-                .match(UpdatedBoid.class, this::onUpdatedBoid)
+                .match(VelocityCalculated.class, this::onVelocityCalculated)
+                .match(BoidUpdated.class, this::onBoidUpdated)
                 .match(StartSimulation.class, msg -> this.stash())
                 .match(ContinueSimulation.class, msg -> this.stash())
                 .match(BootSimulation.class, msg -> this.stash())
@@ -90,20 +91,8 @@ public class BoidsManagerActor extends AbstractActorWithStash {
                 .match(SetAlignmentWeight.class, this::onAlignmentWeight)
                 .match(SetCohesionWeight.class, this::onCohesionWeight)
                 .match(ContinueSimulation.class, msg -> this.stash())
-                .match(UpdatedBoid.class, msg -> this.stash())
+                .match(BoidUpdated.class, msg -> this.stash())
                 .build();
-    }
-
-    private void createDispatchers() {
-        dispatcherActors = new ArrayList<>();
-        int chunkSize = (int) Math.ceil((double) boidActors.size() / NUM_WORKERS);
-
-        for (int i = 0; i < NUM_WORKERS; i++) {
-            int start = i * chunkSize;
-            int end = Math.min(start + chunkSize, boidActors.size());
-            List<ActorRef> chunk = boidActors.subList(start, end);
-            dispatcherActors.add(getContext().actorOf(BoidDispatcherActor.props(chunk)));
-        }
     }
 
     private void onBootSimulation(BootSimulation msg) {
@@ -127,7 +116,7 @@ public class BoidsManagerActor extends AbstractActorWithStash {
         t0 = System.currentTimeMillis();
 
         for (ActorRef boidActor : boidActors) {
-            boidActor.tell(new StartUpdate(model.getBoids()), self());
+            boidActor.tell(new CalculateVelocity(model.getBoids()), self());
         }
 
         updatedBoids.clear();
@@ -136,14 +125,27 @@ public class BoidsManagerActor extends AbstractActorWithStash {
         this.unstashAll();
         this.getContext().become(collectUpdateBehavior());
         System.out.println("Started simulation");
+    }
 
+    private void onVelocityCalculated(VelocityCalculated msg) {
+        // System.out.println("Received velocity calculated message");
+        count++;
+        if (count < boidActors.size()) {
+            return;
+        }
+
+        for (ActorRef boidActor : boidActors) {
+            boidActor.tell(new UpdateBoid(), self());
+        }
+
+        count = 0;
     }
 
     private void onContinueSimulation(ContinueSimulation msg) {
         //System.out.println("Starting simulation with " + nBoids + " boids.");
         t0 = System.currentTimeMillis();
         for (ActorRef boidActor : boidActors) {
-            boidActor.tell(new StartUpdate(model.getBoids()), self());
+            boidActor.tell(new CalculateVelocity(model.getBoids()), self());
         }
         updatedBoids.clear();
         count = 0;
@@ -152,7 +154,8 @@ public class BoidsManagerActor extends AbstractActorWithStash {
         this.getContext().become(collectUpdateBehavior());
     }
 
-    private void onUpdatedBoid(UpdatedBoid msg) {
+
+    private void onBoidUpdated(BoidUpdated msg) {
         // System.out.println("Received updated boid: " + msg.boid());
         updatedBoids.addAll(msg.updatedChunk());
         count++;
