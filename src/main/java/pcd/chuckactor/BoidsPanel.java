@@ -1,4 +1,4 @@
-package pcd.ass01;
+package pcd.chuckactor;
 
 import javax.swing.*;
 import java.awt.*;

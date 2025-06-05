@@ -1,17 +1,17 @@
-package pcd.ass01;
+package pcd.chuckactor;
 
 import akka.actor.AbstractActor;
 import akka.actor.Props;
-import pcd.ass01.BoidProtocol.*;
+import pcd.chuckactor.BoidProtocol.*;
 
 import java.util.List;
 
 public class BoidActor extends AbstractActor {
-    private Boid boid;
     private BoidsModel model;
+    private List<Boid> chunk;
 
-    public BoidActor(Boid boid, BoidsModel model) {
-        this.boid = new Boid(boid.getPos(), boid.getVel());
+    public BoidActor(List<Boid> chunk, BoidsModel model) {
+        this.chunk = chunk;
         this.model = new BoidsModel(model.getBoids().size(),
                 model.getSeparationWeight(),
                 model.getAlignmentWeight(),
@@ -23,8 +23,8 @@ public class BoidActor extends AbstractActor {
                 model.getAvoidRadius());
     }
 
-    public static Props props(Boid boid, BoidsModel model) {
-        return Props.create(BoidActor.class, () -> new BoidActor(boid, model));
+    public static Props props(List<Boid> chunk, BoidsModel model) {
+        return Props.create(BoidActor.class, () -> new BoidActor(chunk, model));
     }
 
     @Override
@@ -45,7 +45,9 @@ public class BoidActor extends AbstractActor {
 
     public void onStartUpdate(StartUpdate msg) {
         model.setBoids(msg.boids());
-        boid.update(model);
-        getSender().tell(new UpdatedBoid(boid), getSelf());
+        for(Boid boid : chunk) {
+            boid.update(model);
+        }
+        getSender().tell(new UpdatedBoid(chunk), getSelf());
     }
 }

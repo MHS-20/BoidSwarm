@@ -1,7 +1,7 @@
-package pcd.ass01;
+package pcd.chuckactor;
 
 import akka.actor.*;
-import pcd.ass01.BoidProtocol.*;
+import pcd.chuckactor.BoidProtocol.*;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -23,7 +23,7 @@ public class BoidsManagerActor extends AbstractActorWithStash {
     private List<ActorRef> boidActors;
 
     private List<ActorRef> dispatcherActors;
-    private final int NUM_DISPATCHERS = 8;
+    private final int NUM_WORKERS = 8;
 
     public BoidsManagerActor(BoidsModel model, int nBoids, BoidsView view) {
         this.model = model;
@@ -35,18 +35,6 @@ public class BoidsManagerActor extends AbstractActorWithStash {
 
     public static Props props(BoidsModel model, int nBoids, BoidsView view) {
         return Props.create(BoidsManagerActor.class, () -> new BoidsManagerActor(model, nBoids, view));
-    }
-
-    private void createDispatchers() {
-        dispatcherActors = new ArrayList<>();
-        int chunkSize = (int) Math.ceil((double) boidActors.size() / NUM_DISPATCHERS);
-
-        for (int i = 0; i < NUM_DISPATCHERS; i++) {
-            int start = i * chunkSize;
-            int end = Math.min(start + chunkSize, boidActors.size());
-            List<ActorRef> chunk = boidActors.subList(start, end);
-            dispatcherActors.add(getContext().actorOf(BoidDispatcherActor.props(chunk)));
-        }
     }
 
     @Override
@@ -106,31 +94,41 @@ public class BoidsManagerActor extends AbstractActorWithStash {
                 .build();
     }
 
+    private void createDispatchers() {
+        dispatcherActors = new ArrayList<>();
+        int chunkSize = (int) Math.ceil((double) boidActors.size() / NUM_WORKERS);
+
+        for (int i = 0; i < NUM_WORKERS; i++) {
+            int start = i * chunkSize;
+            int end = Math.min(start + chunkSize, boidActors.size());
+            List<ActorRef> chunk = boidActors.subList(start, end);
+            dispatcherActors.add(getContext().actorOf(BoidDispatcherActor.props(chunk)));
+        }
+    }
+
     private void onBootSimulation(BootSimulation msg) {
         System.out.println("Booting simulation");
         model = msg.model();
         boidActors.clear();
-        List<Boid> boids = model.getBoids();
-        for (int i = 0; i < nBoids; i++) {
-            Boid boid = boids.get(i);
-            ActorRef boidActor = getContext().actorOf(BoidActor.props(boid, model));
-            boidActors.add(boidActor);
-        }
 
-        createDispatchers();
+        List<Boid> boids = model.getBoids();
+        int chunkSize = (int) Math.ceil((double) boids.size() / NUM_WORKERS);
+
+        for (int i = 0; i < NUM_WORKERS; i++) {
+            int start = i * chunkSize;
+            int end = Math.min(start + chunkSize, boids.size());
+            List<Boid> chunk = boids.subList(start, end);
+            boidActors.add(getContext().actorOf(BoidActor.props(chunk, model)));
+        }
     }
 
     private void onStartSimulation(StartSimulation msg) {
         System.out.println("Starting simulation");
         t0 = System.currentTimeMillis();
 
-        for (ActorRef dispatcher : dispatcherActors) {
-            dispatcher.tell(new StartUpdate(model.getBoids()), self());
+        for (ActorRef boidActor : boidActors) {
+            boidActor.tell(new StartUpdate(model.getBoids()), self());
         }
-
-//        for (ActorRef boidActor : boidActors) {
-//            boidActor.tell(new StartUpdate(model.getBoids()), self());
-//        }
 
         updatedBoids.clear();
         count = 0;
@@ -156,9 +154,10 @@ public class BoidsManagerActor extends AbstractActorWithStash {
 
     private void onUpdatedBoid(UpdatedBoid msg) {
         // System.out.println("Received updated boid: " + msg.boid());
-        updatedBoids.add(msg.boid());
+        //updatedBoids.add(msg.updatedChunk());
+        updatedBoids.addAll(msg.updatedChunk());
         count++;
-        if (count == nBoids) {
+        if (count == boidActors.size()) {
 
             // update gui
             model.setBoids(new ArrayList<>(updatedBoids));
@@ -191,12 +190,8 @@ public class BoidsManagerActor extends AbstractActorWithStash {
         this.updatedBoids = new ArrayList<>(msg.boids());
         this.nBoids = msg.boids().size();
 
-//        for (ActorRef boidActor : boidActors) {
-//            boidActor.tell(PoisonPill.getInstance(), self());
-//        }
-
-        for (ActorRef dispatcher : dispatcherActors) {
-            dispatcher.tell(new ResetSimulation(model.getBoids()), self());
+        for (ActorRef boidActor : boidActors) {
+            boidActor.tell(PoisonPill.getInstance(), self());
         }
 
         boidActors.clear();

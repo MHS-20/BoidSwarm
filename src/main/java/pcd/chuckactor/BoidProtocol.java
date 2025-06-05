@@ -1,4 +1,4 @@
-package pcd.ass01;
+package pcd.chuckactor;
 
 import java.util.List;
 
@@ -6,7 +6,7 @@ public interface BoidProtocol {
     // Simulation Workflow
     public static record StartUpdate(List<Boid> boids) {}
     public static record ContinueSimulation () {}
-    public static record UpdatedBoid (Boid boid) {}
+    public static record UpdatedBoid (List<Boid> updatedChunk) {}
 
     // Simulation Control
     public static record BootSimulation(BoidsModel model) {}
