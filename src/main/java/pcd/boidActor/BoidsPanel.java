@@ -1,4 +1,4 @@
-package pcd.ass01;
+package pcd.boidActor;
 
 import javax.swing.*;
 import java.awt.*;

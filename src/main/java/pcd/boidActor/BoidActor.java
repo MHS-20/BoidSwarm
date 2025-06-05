@@ -1,10 +1,8 @@
-package pcd.ass01;
+package pcd.boidActor;
 
 import akka.actor.AbstractActor;
 import akka.actor.Props;
-import pcd.ass01.BoidProtocol.*;
-
-import java.util.List;
+import pcd.boidActor.BoidProtocol.*;
 
 public class BoidActor extends AbstractActor {
     private Boid boid;

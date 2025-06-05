@@ -1,7 +1,7 @@
-package pcd.ass01;
+package pcd.boidActor;
 
 import akka.actor.*;
-import pcd.ass01.BoidProtocol.*;
+import pcd.boidActor.BoidProtocol.*;
 
 import java.util.ArrayList;
 import java.util.List;

@@ -1,4 +1,4 @@
-package pcd.ass01;
+package pcd.boidActor;
 
 import akka.actor.ActorRef;
 import akka.actor.ActorSystem;
