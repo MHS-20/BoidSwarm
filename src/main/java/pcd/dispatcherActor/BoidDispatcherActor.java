@@ -1,7 +1,7 @@
-package pcd.ass01;
+package pcd.dispatcherActor;
 
 import akka.actor.*;
-import pcd.ass01.BoidProtocol.*;
+import pcd.dispatcherActor.BoidProtocol.*;
 
 import java.util.List;
 
