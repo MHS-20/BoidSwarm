@@ -9,6 +9,7 @@ import javax.swing.event.ChangeListener;
 import pcd.boidActor.BoidProtocol.*;
 
 import java.awt.*;
+import java.lang.reflect.InvocationTargetException;
 import java.util.Hashtable;
 
 public class BoidsView implements ChangeListener {
@@ -81,7 +82,7 @@ public class BoidsView implements ChangeListener {
 
         resetButton = new JButton("Reset");
         resetButton.addActionListener(e -> {
-           manager.tell(new BoidProtocol.ResetSimulation(this.nBoids), ActorRef.noSender());
+            manager.tell(new BoidProtocol.ResetSimulation(this.nBoids), ActorRef.noSender());
         });
 
         playButton = new JButton("Resume");
@@ -137,10 +138,16 @@ public class BoidsView implements ChangeListener {
     }
 
     public void update(int frameRate) {
-        SwingUtilities.invokeLater(() -> {
-            boidsPanel.setModel(model);
-            boidsPanel.repaint();
-        });
+        try {
+            SwingUtilities.invokeAndWait(() -> {
+                boidsPanel.setFrameRate(frameRate);
+                boidsPanel.repaint();
+            });
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
+        } catch (InvocationTargetException e) {
+            throw new RuntimeException(e);
+        }
         // boidsPanel.setFrameRate(frameRate);
         // boidsPanel.repaint();
     }
