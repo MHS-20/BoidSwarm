@@ -23,7 +23,7 @@ public class BoidsManagerActor extends AbstractActorWithStash {
     private List<ActorRef> boidActors;
 
     private List<ActorRef> dispatcherActors;
-    private final int NUM_WORKERS = 8;
+    private final int NUM_WORKERS = Runtime.getRuntime().availableProcessors();;
 
     public BoidsManagerActor(BoidsModel model, int nBoids, BoidsView view) {
         this.model = model;

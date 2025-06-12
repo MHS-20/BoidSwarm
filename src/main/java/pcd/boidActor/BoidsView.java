@@ -83,7 +83,7 @@ public class BoidsView implements ChangeListener {
         resetButton.addActionListener(e -> {
            model.generateBoids(this.nBoids);
            this.update(60);
-            manager.tell(new BoidProtocol.ResetSimulation(this.model.getBoids()), ActorRef.noSender());
+           manager.tell(new BoidProtocol.ResetSimulation(this.model.getBoids()), ActorRef.noSender());
         });
 
         playButton = new JButton("Resume");
@@ -122,11 +122,6 @@ public class BoidsView implements ChangeListener {
         this.manager = manager;
     }
 
-    public void setModel(BoidsModel model) {
-        this.model = model;
-        boidsPanel.setModel(model);
-    }
-
     private JSlider makeSlider() {
         var slider = new JSlider(JSlider.HORIZONTAL, 0, 20, 10);
         slider.setMajorTickSpacing(10);
@@ -144,23 +139,24 @@ public class BoidsView implements ChangeListener {
     }
 
     public void update(int frameRate) {
-        boidsPanel.setFrameRate(frameRate);
-        boidsPanel.repaint();
+        SwingUtilities.invokeLater(() -> {
+            boidsPanel.setModel(model);
+            boidsPanel.repaint();
+        });
+        // boidsPanel.setFrameRate(frameRate);
+        // boidsPanel.repaint();
     }
 
     @Override
     public void stateChanged(ChangeEvent e) {
         if (e.getSource() == separationSlider) {
             var val = separationSlider.getValue();
-            model.setSeparationWeight(0.1 * val);
             manager.tell(new SetSeparationWeight(0.1 * val), ActorRef.noSender());
         } else if (e.getSource() == cohesionSlider) {
             var val = cohesionSlider.getValue();
-            model.setCohesionWeight(0.1 * val);
             manager.tell(new SetCohesionWeight(0.1 * val), ActorRef.noSender());
         } else {
             var val = alignmentSlider.getValue();
-            model.setAlignmentWeight(0.1 * val);
             manager.tell(new SetAlignmentWeight(0.1 * val), ActorRef.noSender());
         }
     }

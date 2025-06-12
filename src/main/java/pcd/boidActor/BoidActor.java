@@ -10,15 +10,8 @@ public class BoidActor extends AbstractActor {
 
     public BoidActor(Boid boid, BoidsModel model) {
         this.boid = new Boid(boid.getPos(), boid.getVel());
-        this.model = new BoidsModel(model.getBoids().size(),
-                model.getSeparationWeight(),
-                model.getAlignmentWeight(),
-                model.getCohesionWeight(),
-                model.getWidth(),
-                model.getHeight(),
-                model.getMaxSpeed(),
-                model.getPerceptionRadius(),
-                model.getAvoidRadius());
+        //this.boid = boid;
+        this.model = model;
     }
 
     public static Props props(Boid boid, BoidsModel model) {
@@ -43,7 +36,7 @@ public class BoidActor extends AbstractActor {
     }
 
     public void onCalculateVelocity(CalculateVelocity msg) {
-        model.setBoids(msg.boids());
+        //model.setBoids(msg.boids());
         boid.calculateVelocity(model);
         getSender().tell(new VelocityCalculated(), getSelf());
     }
@@ -51,6 +44,8 @@ public class BoidActor extends AbstractActor {
     public void onUpdateBoid(UpdateBoid msg) {
         boid.updateVelocity(model);
         boid.updatePosition(model);
-        getSender().tell(new BoidUpdated(boid), getSelf());
+        // getSender().tell(new BoidUpdated(boid), getSelf());
+        getSender().tell(new BoidUpdated(new Boid(boid.getPos(), boid.getVel())), getSelf());
+
     }
 }
