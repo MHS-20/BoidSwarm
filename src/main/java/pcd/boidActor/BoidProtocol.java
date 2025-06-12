@@ -15,7 +15,7 @@ public interface BoidProtocol {
     public static record ContinueSimulation () {}
     public static record StartSimulation () {}
     public static record StopSimulation () {}
-    public static record ResetSimulation(List<Boid> boids) {}
+    public static record ResetSimulation(int nboids) {}
 
     // Model weights
     public static record SetSeparationWeight(double weight) {}

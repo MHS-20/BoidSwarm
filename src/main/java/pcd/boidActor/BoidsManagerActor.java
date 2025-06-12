@@ -174,8 +174,9 @@ public class BoidsManagerActor extends AbstractActorWithStash {
     }
 
     private void onResetSimulation(ResetSimulation msg) {
-        this.updatedBoids = new ArrayList<>(msg.boids());
-        this.nBoids = msg.boids().size();
+        // this.updatedBoids = new ArrayList<>(msg.boids());
+        model.generateBoids(msg.nboids());
+        this.nBoids = msg.nboids();
 
         for (ActorRef boidActor : boidActors) {
             boidActor.tell(PoisonPill.getInstance(), self());
