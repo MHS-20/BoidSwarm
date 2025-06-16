@@ -50,6 +50,7 @@ public class BoidsManagerActor extends AbstractActorWithStash {
 
     public Receive updateBehavior() {
         return receiveBuilder()
+                .match(Tick.class, msg -> self().tell(new ContinueSimulation(), self()))
                 .match(StartSimulation.class, this::onStartSimulation)
                 .match(ContinueSimulation.class, this::onContinueSimulation)
                 .match(StopSimulation.class, this::onStopSimulation)
@@ -151,12 +152,11 @@ public class BoidsManagerActor extends AbstractActorWithStash {
             model.setBoids(new ArrayList<>(updatedBoids));
             view.update(framerate);
 
-            var dtElapsed = System.currentTimeMillis() - t0;
-            var frameratePeriod = 1000 / FRAMERATE;
+            long dtElapsed = System.currentTimeMillis() - t0;
+            long frameratePeriod = 1000 / FRAMERATE;
+            long delay = Math.max(0, frameratePeriod - dtElapsed);
+
             if (dtElapsed < frameratePeriod) {
-                try {
-                    Thread.sleep(frameratePeriod - dtElapsed);
-                } catch (Exception ex) { }
                 framerate = FRAMERATE;
             } else {
                 framerate = (int) (1000 / dtElapsed);
@@ -164,7 +164,18 @@ public class BoidsManagerActor extends AbstractActorWithStash {
 
             this.unstashAll();
             this.getContext().become(updateBehavior());
-            self().tell(new ContinueSimulation(), self());
+
+            getContext().system().scheduler().scheduleOnce(
+                    scala.concurrent.duration.Duration.create(delay, java.util.concurrent.TimeUnit.MILLISECONDS),
+                    self(),
+                    new Tick(),
+                    getContext().getSystem().dispatcher(),
+                    self()
+            );
+
+
+            this.unstashAll();
+            // self().tell(new ContinueSimulation(), self());
         }
     }
 

@@ -12,10 +12,13 @@ public interface BoidProtocol {
 
     // Simulation Control
     public static record BootSimulation(BoidsModel model) {}
-    public static record ContinueSimulation () {}
     public static record StartSimulation () {}
     public static record StopSimulation () {}
     public static record ResetSimulation(int nboids) {}
+
+    public static record Tick() {}
+    public static record ContinueSimulation () {}
+
 
     // Model weights
     public static record SetSeparationWeight(double weight) {}
