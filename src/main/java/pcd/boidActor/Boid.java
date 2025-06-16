@@ -146,7 +146,7 @@ public class Boid {
                 count++;
             }
         }
-        if (count > 0) {
+        if (count > 0 && dx != 0 && dy != 0) {
             dx /= count;
             dy /= count;
             return new V2d(dx, dy).getNormalized();

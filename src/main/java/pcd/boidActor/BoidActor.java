@@ -9,10 +9,10 @@ public class BoidActor extends AbstractActor {
     private BoidsModel model;
 
     public BoidActor(Boid boid, BoidsModel model) {
-        // this.boid = new Boid(boid.getPos(), boid.getVel());
-        this.boid = boid;
+        this.boid = new Boid(boid.getPos(), boid.getVel());
+        // this.boid = boid;
 
-        //this.model = model;
+        // this.model = model;
         this.model = new BoidsModel(model.getBoids().size(),
                 model.getSeparationWeight(),
                 model.getAlignmentWeight(),
@@ -55,7 +55,8 @@ public class BoidActor extends AbstractActor {
         boid.updateVelocity(model);
         boid.updatePosition(model);
         // getSender().tell(new BoidUpdated(boid), getSelf());
-        getSender().tell(new BoidUpdated(new Boid(boid.getPos(), boid.getVel())), getSelf());
+        getSender().tell(new BoidUpdated(new Boid(new P2d(boid.getPos().x(), boid.getPos().y()),
+                new V2d(boid.getVel().x(), boid.getVel().y()))), getSelf());
 
     }
 }

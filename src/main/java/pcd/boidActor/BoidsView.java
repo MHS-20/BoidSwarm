@@ -148,8 +148,6 @@ public class BoidsView implements ChangeListener {
         } catch (InvocationTargetException e) {
             throw new RuntimeException(e);
         }
-        // boidsPanel.setFrameRate(frameRate);
-        // boidsPanel.repaint();
     }
 
     @Override

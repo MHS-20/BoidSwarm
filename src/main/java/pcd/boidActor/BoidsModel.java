@@ -42,11 +42,11 @@ public class BoidsModel {
 
     }
 
-    public synchronized List<Boid> getBoids() {
+    public List<Boid> getBoids() {
         return new ArrayList<>(this.boids);
     }
 
-    public synchronized void generateBoids(int nboids) {
+    public void generateBoids(int nboids) {
         boids = new ArrayList<>();
         for (int i = 0; i < nboids; i++) {
             P2d pos = new P2d(-width / 2 + Math.random() * width, -height / 2 + Math.random() * height);
@@ -76,7 +76,7 @@ public class BoidsModel {
         return copy;
     }
 
-    public synchronized void setBoids(List<Boid> boids) {
+    public void setBoids(List<Boid> boids) {
         this.boids = boids;
     }
 

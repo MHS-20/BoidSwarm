@@ -5,7 +5,7 @@ import akka.actor.ActorSystem;
 
 public class BoidsSimulation {
 
-    final static int N_BOIDS = 1500;
+    final static int N_BOIDS = 5;
 
     final static double SEPARATION_WEIGHT = 1.0;
     final static double ALIGNMENT_WEIGHT = 1.0;

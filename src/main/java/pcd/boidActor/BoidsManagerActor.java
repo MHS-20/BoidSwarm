@@ -174,7 +174,6 @@ public class BoidsManagerActor extends AbstractActorWithStash {
     }
 
     private void onResetSimulation(ResetSimulation msg) {
-        // this.updatedBoids = new ArrayList<>(msg.boids());
         model.generateBoids(msg.nboids());
         this.nBoids = msg.nboids();
 
